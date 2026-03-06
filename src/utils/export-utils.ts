@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 
 /**
  * Render một DOM element thành ảnh PNG với độ phân giải cao
+ * Nếu element là canvas hoặc chứa canvas, sử dụng toDataURL trực tiếp để tăng tính ổn định trên Safari
  */
 export const captureElement = async (
     element: HTMLElement,
@@ -11,13 +12,28 @@ export const captureElement = async (
     width?: number,
     height?: number
 ): Promise<string> => {
+    // Nếu là canvas, dùng toDataURL trực tiếp (ổn định nhất cho Safari)
+    if (element instanceof HTMLCanvasElement) {
+        return element.toDataURL('image/png', 1.0);
+    }
+
+    // Nếu element chứa canvas (như FabricJS container)
+    const canvas = element.querySelector('canvas');
+    if (canvas) {
+        // Tái tạo lại toPng logic nhưng ưu tiên canvas
+        try {
+            return canvas.toDataURL('image/png', 1.0);
+        } catch (e) {
+            console.warn('Canvas toDataURL failed, falling back to html-to-image', e);
+        }
+    }
+
     return await toPng(element, {
         pixelRatio: pixelRatio,
         cacheBust: true,
         width: width,
         height: height,
         filter: (node: any) => {
-            // Loại bỏ các node có attribute data-export-ignore
             if (node.hasAttribute && node.hasAttribute('data-export-ignore')) {
                 return false;
             }

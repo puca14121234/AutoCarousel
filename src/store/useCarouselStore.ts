@@ -24,7 +24,6 @@ export const getCanvasSize = (ratio: AspectRatio) => {
 
 export interface DesignSettings {
     aspectRatio: AspectRatio;
-    fontSizeTitle: number;
     backgroundColor: string;
     coverImage: string | null;
     contentImage: string | null;
@@ -112,7 +111,6 @@ export const presets: Record<string, Partial<DesignSettings>> = {
 
 const defaultSettings: DesignSettings = {
     aspectRatio: '3:4',
-    fontSizeTitle: 48,
     backgroundColor: '#ffffff',
     coverImage: null,
     contentImage: null,
