@@ -16,6 +16,13 @@ export const captureElement = async (
         cacheBust: true,
         width: width,
         height: height,
+        filter: (node: any) => {
+            // Loại bỏ các node có attribute data-export-ignore
+            if (node.hasAttribute && node.hasAttribute('data-export-ignore')) {
+                return false;
+            }
+            return true;
+        },
         style: {
             transform: 'scale(1)',
             transformOrigin: 'top left',

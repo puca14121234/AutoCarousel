@@ -323,13 +323,13 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     </div>
                                 </div>
 
-                                {/* 4. DOM: Text Layer Overlay (For Stable Rendering in Exports) */}
+                                {/* 4. DOM: Text Layer Overlay (Giao thức render mới siêu ổn định cho Safari) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
                                     top: textRect.top,
                                     width: textRect.width,
-                                    height: textRect.height,
+                                    // Bỏ height cứng để tránh đè nén dòng nếu line-height khác biệt
                                     transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
                                     pointerEvents: 'none',
                                     zIndex: 30,
@@ -342,17 +342,22 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     fontSize: isCover ? (settings.coverTitleFontSize ?? 72) : settings.fontSizeContent,
                                     fontWeight: isCover ? (settings.coverTitleFontWeight ?? 'bold') : 'normal',
                                     lineHeight: isCover ? (settings.coverTitleLineHeight ?? 1.2) : (settings.contentLineHeight ?? 1.5),
-                                    whiteSpace: 'pre-wrap',
+                                    whiteSpace: 'pre-wrap', // Dùng pre-wrap để wrap tự nhiên như FabricJS
                                     wordBreak: 'break-word',
-                                    padding: '0 40px', // Khớp với padding của Fabric Textbox
+                                    padding: '0 40px',
                                 }}>
                                     {slide ? (isCover ? slide.title : slide.content) : ''}
                                 </div>
                             </>
                         )}
 
-                        {/* 3. FabricJS: Lớp Text trong suốt bên trên cùng chứa text chỉnh sửa được */}
-                        <div className="absolute inset-0 z-20 print:hidden" style={{ opacity: 1 }}>
+                        {/* 3. FabricJS: Lớp Text trong suốt (Chỉ dùng để Tương tác/Kéo thả) */}
+                        {/* data-export-ignore sẽ giúp html-to-image bỏ qua lớp này khi chụp, tránh bị "bóng ma" chữ */}
+                        <div
+                            className="absolute inset-0 z-20 print:hidden"
+                            style={{ opacity: 1 }}
+                            data-export-ignore="true"
+                        >
                             <canvas ref={canvasRef} />
                         </div>
                     </div>

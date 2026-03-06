@@ -8,7 +8,7 @@ import { InputPanel } from './InputPanel';
 import { CanvasEditor } from './CanvasEditor';
 import { Timeline } from './Timeline';
 import { DesignSidebar } from './DesignSidebar';
-import { captureElement, bulkDownloadToDirectory } from '@/utils/export-utils';
+import { captureElement, bulkDownloadToDirectory, shareImages } from '@/utils/export-utils';
 
 export const MobileWizard: React.FC = () => {
     const {
@@ -21,9 +21,8 @@ export const MobileWizard: React.FC = () => {
     const handleExport = async () => {
         if (slides.length === 0) return;
 
-        // Nếu đã có ảnh đã xử lý, thực hiện Share
+        // Nếu đã có ảnh đã xử lý, thực hiện Share ngay lập tức (Để giữ User Gesture)
         if (processedImages && processedImages.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
-            const { shareImages } = await import('@/utils/export-utils');
             await shareImages(processedImages);
             setProcessedImages(null);
             return;
@@ -35,11 +34,13 @@ export const MobileWizard: React.FC = () => {
             const imageData: { dataUrl: string, name: string }[] = [];
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
+                // Đảm bảo Canvas đã render xong slide mới
                 await new Promise(resolve => setTimeout(resolve, 800));
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);
-                    const dataUrl = await captureElement(el, 3, canvasSize.width, canvasSize.height);
+                    // Dùng pixelRatio 2 cho mobile để nhanh và tiết kiệm bộ nhớ
+                    const dataUrl = await captureElement(el, 2, canvasSize.width, canvasSize.height);
                     imageData.push({ dataUrl, name: `carousel-slide-${i + 1}.png` });
                 }
             }
@@ -47,6 +48,8 @@ export const MobileWizard: React.FC = () => {
             if (imageData.length > 0) {
                 if (typeof navigator !== 'undefined' && !!navigator.share) {
                     setProcessedImages(imageData);
+                    // Alert nhẹ để người dùng biết là đã xong bước chuẩn bị
+                    alert("Đã chuẩn bị xong " + imageData.length + " ảnh. Vui lòng nhấn nút lần nữa để lưu vào thư viện ảnh!");
                 } else {
                     // Fallback PC download lẻ
                     imageData.forEach(img => {

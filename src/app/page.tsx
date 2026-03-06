@@ -29,11 +29,16 @@ export default function Home() {
 
     const handleExport = async () => {
         if (slides.length === 0) return;
+
+        // Bước 2: Share thực sự (Cần user click trực tiếp)
+        if (processedImages && processedImages.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
+            await shareImages(processedImages);
+            setProcessedImages(null);
+            return;
+        }
+
         setIsExporting(true);
-
-        const images: { dataUrl: string, name: string }[] = [];
-        const canvasSize = getCanvasSize(settings.aspectRatio);
-
+        setProcessedImages(null);
         try {
             const images: { dataUrl: string, name: string }[] = [];
             // @ts-ignore
@@ -45,29 +50,33 @@ export default function Home() {
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);
-                    const dataUrl = await captureElement(el, 3, canvasSize.width, canvasSize.height);
+                    // Dùng 2x để ổn định hơn cho Safari
+                    const dataUrl = await captureElement(el, 2, canvasSize.width, canvasSize.height);
                     const fileName = `carousel-slide-${i + 1}.png`;
 
                     if (directoryHandle) {
-                        // @ts-ignore
-                        const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
-                        // @ts-ignore
-                        const writable = await fileHandle.createWritable();
-                        const response = await fetch(dataUrl);
-                        const blob = await response.blob();
-                        await writable.write(blob);
-                        await writable.close();
-                    } else if (!navigator.share) {
-                        // Chỉ tải lẻ tự động nếu KHÔNG phải mobile (để tránh chặn popup)
+                        try {
+                            const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+                            const writable = await fileHandle.createWritable();
+                            const response = await fetch(dataUrl);
+                            const blob = await response.blob();
+                            await writable.write(blob);
+                            await writable.close();
+                        } catch (e) {
+                            console.error('File write failed:', e);
+                        }
+                    } else if (typeof window !== 'undefined' && !navigator.share) {
+                        // Chỉ tải lẻ tự động nếu KHÔNG hỗ trợ Share (để tránh spam popup trên mobile)
                         downloadImage(dataUrl, fileName);
                     }
                     images.push({ dataUrl, name: fileName });
                 }
             }
 
-            // Nếu là mobile, lưu vào store để người dùng ấn nút lần 2
+            // Nếu hỗ trợ Share, nhắc người dùng click lần 2
             if (images.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
                 setProcessedImages(images);
+                alert("Đã xong bước chuẩn bị. Vui lòng nhấn nút 'Lưu vào máy' một lần nữa để hoàn tất!");
             }
 
             setCurrentSlideIndex(0);
