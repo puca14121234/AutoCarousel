@@ -65,6 +65,8 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
         const canvas = fabricRef.current;
         if (!canvas || !slide) return;
 
+        const { updateSettings } = useCarouselStore.getState();
+
         // Cập nhật Kích thước theo tỷ lệ mới
         const size = getCanvasSize(settings.aspectRatio);
         if (canvas.width !== size.width || canvas.height !== size.height) {
@@ -80,6 +82,11 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
         const isCover = slideIndex === 0;
         const textToRender = isCover ? slide.title : slide.content;
 
+        // Vị trí: Nếu là cover thì ưu tiên lấy từ store, nếu không thì mặc định giữa
+        const initialPos = (isCover && settings.coverContentPosition)
+            ? settings.coverContentPosition
+            : { left: centerX, top: centerY };
+
         const contentText = new fabric.Textbox(textToRender, {
             width: canvas.width! - settings.padding * 2,
             fontSize: isCover ? (settings.coverTitleFontSize ?? 72) : settings.fontSizeContent,
@@ -90,10 +97,11 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
             textAlign: isCover ? (settings.coverTitleAlign ?? 'center') : (settings.contentTextAlign ?? 'center'),
             originX: 'center',
             originY: 'center',
-            left: centerX,
-            top: centerY,
-            selectable: true,
-            hasControls: false, // Bỏ các nút điều khiển kích thước/xoay theo yêu cầu
+            left: initialPos.left,
+            top: initialPos.top,
+            selectable: isCover, // Chỉ cho kéo ở trang bìa
+            evented: isCover,    // Chỉ nhận sự kiện ở trang bìa
+            hasControls: false,  // Không hiện nút resize
             lockScalingX: true,
             lockScalingY: true,
             lockRotation: true,
@@ -111,7 +119,40 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
             });
         };
 
-        contentText.on('moving', updateRect);
+        // Snap logic mạnh mẽ cho Cover
+        if (isCover) {
+            contentText.on('moving', (e) => {
+                const obj = contentText;
+                const canvasWidth = canvas.width!;
+                const canvasHeight = canvas.height!;
+                const snapThreshold = 25; // Tăng độ nhạy snap
+
+                const midX = canvasWidth / 2;
+                const midY = canvasHeight / 2;
+
+                // Snap X
+                if (Math.abs(obj.left! - midX) < snapThreshold) {
+                    obj.set({ left: midX });
+                }
+                // Snap Y
+                if (Math.abs(obj.top! - midY) < snapThreshold) {
+                    obj.set({ top: midY });
+                }
+
+                updateRect();
+            });
+
+            // Lưu vị trí khi kết thúc di chuyển
+            contentText.on('modified', () => {
+                updateSettings({
+                    coverContentPosition: {
+                        left: contentText.left!,
+                        top: contentText.top!
+                    }
+                });
+            });
+        }
+
         contentText.on('scaling', updateRect);
         contentText.on('rotating', updateRect);
         contentText.on('modified', updateRect);
@@ -122,7 +163,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
         canvas.renderAll();
         updateRect();
 
-    }, [slide, settings, slides.length]); // Thêm slides.length để cập nhật số trang
+    }, [slide, settings.aspectRatio, settings.coverTitleFontSize, settings.fontSizeContent, settings.textColor, settings.padding, slides.length]);
 
     useEffect(() => {
         const updateScale = () => {

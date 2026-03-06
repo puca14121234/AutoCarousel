@@ -50,6 +50,7 @@ export interface DesignSettings {
     watermark: string;
     watermarkLogo: string | null;
     footerSpacing: number;
+    coverContentPosition: { left: number, top: number } | null;
 }
 
 interface CarouselState {
@@ -133,6 +134,7 @@ const defaultSettings: DesignSettings = {
     watermark: 'Mẹ Zin Review',
     watermarkLogo: null,
     footerSpacing: 60,
+    coverContentPosition: null,
 };
 
 export const useCarouselStore = create<CarouselState>()(

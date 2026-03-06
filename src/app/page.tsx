@@ -108,9 +108,6 @@ export default function Home() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-all text-gray-400">
-                            Chế độ tối
-                        </button>
                         <button
                             disabled={isExporting || slides.length === 0}
                             onClick={handleExport}

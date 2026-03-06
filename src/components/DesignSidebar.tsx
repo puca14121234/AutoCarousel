@@ -37,7 +37,7 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({ isMobile, mode = '
             {/* 1. Mô hình Slide */}
             {(mode === 'full') && (
                 <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">1. Mô hình Slide</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">1. Tỷ lệ khung hình</h3>
                     <div className="grid grid-cols-2 gap-2">
                         {ratios.map((r) => (
                             <button
@@ -142,7 +142,7 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({ isMobile, mode = '
             {/* 3. Cài đặt text tiêu đề */}
             {(mode === 'full') && (
                 <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">3. Cài đặt Tiêu đề Bìa</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">3. Tiêu đề</h3>
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-xs text-gray-500">Phông chữ Tiêu đề</label>
@@ -204,7 +204,7 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({ isMobile, mode = '
             {/* 4. Cài đặt text nội dung */}
             {(mode === 'full') && (
                 <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">4. Cài đặt Nội dung</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">4. Nội dung</h3>
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-xs text-gray-500">Phông chữ Nội dung</label>
@@ -266,7 +266,7 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({ isMobile, mode = '
             {/* 5. Hiệu ứng Glassmorphism */}
             {(mode === 'full') && (
                 <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">5. Hiệu ứng Glassmorphism</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">5. Tuỳ chỉnh nền</h3>
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-xs text-gray-500">Màu chữ (Dùng chung)</label>
@@ -362,7 +362,7 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({ isMobile, mode = '
 
             {/* 6. Logo / Bản quyền */}
             <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">6. Logo / Bản quyền</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">6. Branding</h3>
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
                         <label className="text-xs text-gray-500">Logo thương hiệu</label>
