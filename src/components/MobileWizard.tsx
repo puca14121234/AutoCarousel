@@ -34,12 +34,12 @@ export const MobileWizard: React.FC = () => {
             const imageData: { dataUrl: string, name: string }[] = [];
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
-                // Đảm bảo Canvas đã render xong slide mới
-                await new Promise(resolve => setTimeout(resolve, 800));
+                // Safari cần nhiều thời gian nạp DataURL lớn
+                await new Promise(resolve => setTimeout(resolve, 1200));
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);
-                    // Dùng pixelRatio 2 cho mobile để nhanh và tiết kiệm bộ nhớ
+                    // Giữ tỉ lệ 2 cho iPhone ổn định
                     const dataUrl = await captureElement(el, 2, canvasSize.width, canvasSize.height);
                     imageData.push({ dataUrl, name: `carousel-slide-${i + 1}.png` });
                 }

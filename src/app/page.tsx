@@ -46,7 +46,8 @@ export default function Home() {
 
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
-                await new Promise(resolve => setTimeout(resolve, 800));
+                // Tăng độ trễ an toàn cho iPhone xử lý DataURL lớn
+                await new Promise(resolve => setTimeout(resolve, 1200));
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);

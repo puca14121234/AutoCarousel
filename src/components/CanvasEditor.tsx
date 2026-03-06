@@ -192,6 +192,34 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
         };
     }, [settings.aspectRatio]);
 
+    const [bgDataUrl, setBgDataUrl] = useState<string | null>(null);
+
+    // Effect: Convert Background Image to DataURL for stable Safari capture
+    useEffect(() => {
+        if (!currentBgImage) {
+            setBgDataUrl(null);
+            return;
+        }
+
+        const convertToDataUrl = async () => {
+            try {
+                const response = await fetch(currentBgImage, { cache: 'no-cache' });
+                const blob = await response.blob();
+                return new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.error('DataURL conversion failed:', e);
+                return currentBgImage; // Fallback to original
+            }
+        };
+
+        convertToDataUrl().then(url => setBgDataUrl(url as string));
+    }, [currentBgImage]);
+
     const currentSize = getCanvasSize(settings.aspectRatio);
 
     return (
@@ -216,28 +244,26 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                             width: currentSize.width,
                             height: currentSize.height,
                             transform: `scale(${scale})`,
-                            // Bỏ overflow-hidden để bóng đổ có thể vươn ra ngoài biên canvas
                         }}
                     >
-                        {/* 1. DOM: Background Image thật sự đằng sau */}
-                        {currentBgImage && (
+                        {/* 1. DOM: Background Image thật sự đằng sau (Dùng DataURL cho Safari) */}
+                        {bgDataUrl && (
                             <img
-                                src={currentBgImage}
+                                src={bgDataUrl}
                                 alt="bg"
                                 className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
                             />
                         )}
 
-                        {/* 2. DOM: Shadow & Glass Layers (Kỹ thuật Safe-Margin để bóng không bao giờ bị xén) */}
+                        {/* 2. DOM: Shadow & Glass Layers (Gộp Text vào trong để Safari capture đồng nhất) */}
                         {textRect && (
                             <>
-                                {/* Shadow Layer (Khung bao LỚN HƠN hẳn để chứa trọn vẹn box-shadow) */}
+                                {/* Shadow Layer */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
                                     top: textRect.top + (settings.footerSpacing ?? 40) / 2,
                                     transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                    // Thêm 200px mỗi chiều để tạo "vùng đệm an toàn" cho bóng đổ
                                     width: textRect.width + 280,
                                     height: textRect.height + 280 + (settings.footerSpacing ?? 40),
                                     display: 'flex',
@@ -247,7 +273,6 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     zIndex: 9
                                 }}>
                                     <div style={{
-                                        // Hộp bóng đổ thực tế có kích thước khớp với Glass Layer
                                         width: textRect.width + 80,
                                         height: textRect.height + 80 + (settings.footerSpacing ?? 40),
                                         borderRadius: `${settings.borderRadius}px`,
@@ -256,7 +281,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     }} />
                                 </div>
 
-                                {/* Glass Layer (Double-Wrap: Lớp cha bo góc để hớt phần Blur tràn của lớp con) */}
+                                {/* Glass Layer (Hạt nhân của render) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
@@ -265,40 +290,62 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     width: textRect.width + 80,
                                     height: textRect.height + 80 + (settings.footerSpacing ?? 40),
                                     borderRadius: `${settings.borderRadius}px`,
-                                    overflow: 'hidden', // Lớp cha đóng vai trò hớt góc sạch sẽ
+                                    overflow: 'hidden',
                                     pointerEvents: 'none',
                                     zIndex: 10,
-                                    // Thêm border ở lớp ngoài để đảm bảo bo góc mượt
                                     border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                 }}>
-                                    {/* Stable Blur Layer: Nhân bản ảnh nền và làm mờ (Capture-safe for iOS) */}
-                                    {currentBgImage && (
+                                    {/* Stable Blur Layer (Dùng DataURL) */}
+                                    {bgDataUrl && (
                                         <div style={{
                                             position: 'absolute',
-                                            // Độ lệch để ảnh nền phụ khớp 100% với ảnh nền chính
                                             left: -(textRect.left - (textRect.width + 80) / 2),
                                             top: -(textRect.top + (settings.footerSpacing ?? 40) / 2 - (textRect.height + 80 + (settings.footerSpacing ?? 40)) / 2),
                                             width: currentSize.width,
                                             height: currentSize.height,
                                             filter: `blur(${settings.blur}px)`,
-                                            transform: `rotate(${-textRect.angle}deg)`, // Hủy xoay để ảnh khớp trục
+                                            transform: `rotate(${-textRect.angle}deg)`,
                                             zIndex: -1
                                         }}>
                                             <img
-                                                src={currentBgImage}
+                                                src={bgDataUrl}
                                                 alt="bg-blur"
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
                                     )}
 
-                                    {/* Inner Color Layer (Màu nền đè lên Blur) */}
+                                    {/* Inner Color & Content Wrapper */}
                                     <div style={{
                                         width: '100%',
                                         height: '100%',
                                         backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
                                         borderRadius: 'inherit',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
                                     }}>
+                                        {/* 4. DOM: Text Overlay (Đã đưa vào TRONG Glass để Safari chụp đồng nhất) */}
+                                        <div style={{
+                                            width: textRect.width,
+                                            textAlign: isCover ? (settings.coverTitleAlign ?? 'center') : (settings.contentTextAlign ?? 'center'),
+                                            color: settings.textColor,
+                                            fontFamily: isCover ? (settings.coverTitleFontFamily ?? settings.contentFontFamily) : settings.contentFontFamily,
+                                            fontSize: isCover ? (settings.coverTitleFontSize ?? 72) : settings.fontSizeContent,
+                                            fontWeight: isCover ? (settings.coverTitleFontWeight ?? 'bold') : 'normal',
+                                            lineHeight: isCover ? (settings.coverTitleLineHeight ?? 1.2) : (settings.contentLineHeight ?? 1.5),
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-word',
+                                            padding: '0 40px',
+                                            marginBottom: (settings.footerSpacing ?? 40), // Tạo khoảng trống cho branding
+                                        }}>
+                                            {slide ? (isCover ? slide.title : slide.content) : ''}
+                                        </div>
+
                                         {/* Branding */}
                                         <div
                                             className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
@@ -314,7 +361,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                             )}
                                         </div>
 
-                                        {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
+                                        {/* Page Number */}
                                         {slideIndex > 0 && slides.length > 0 && (
                                             <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
                                                 {slideIndex + 1}/{slides.length}
@@ -322,37 +369,10 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                         )}
                                     </div>
                                 </div>
-
-                                {/* 4. DOM: Text Layer Overlay (Giao thức render mới siêu ổn định cho Safari) */}
-                                <div style={{
-                                    position: 'absolute',
-                                    left: textRect.left,
-                                    top: textRect.top,
-                                    width: textRect.width,
-                                    // Bỏ height cứng để tránh đè nén dòng nếu line-height khác biệt
-                                    transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                    pointerEvents: 'none',
-                                    zIndex: 30,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'center',
-                                    textAlign: isCover ? (settings.coverTitleAlign ?? 'center') : (settings.contentTextAlign ?? 'center'),
-                                    color: settings.textColor,
-                                    fontFamily: isCover ? (settings.coverTitleFontFamily ?? settings.contentFontFamily) : settings.contentFontFamily,
-                                    fontSize: isCover ? (settings.coverTitleFontSize ?? 72) : settings.fontSizeContent,
-                                    fontWeight: isCover ? (settings.coverTitleFontWeight ?? 'bold') : 'normal',
-                                    lineHeight: isCover ? (settings.coverTitleLineHeight ?? 1.2) : (settings.contentLineHeight ?? 1.5),
-                                    whiteSpace: 'pre-wrap', // Dùng pre-wrap để wrap tự nhiên như FabricJS
-                                    wordBreak: 'break-word',
-                                    padding: '0 40px',
-                                }}>
-                                    {slide ? (isCover ? slide.title : slide.content) : ''}
-                                </div>
                             </>
                         )}
 
-                        {/* 3. FabricJS: Lớp Text trong suốt (Chỉ dùng để Tương tác/Kéo thả) */}
-                        {/* data-export-ignore sẽ giúp html-to-image bỏ qua lớp này khi chụp, tránh bị "bóng ma" chữ */}
+                        {/* 3. FabricJS: Lớp Text trong suốt (data-export-ignore: quan trọng để Safari không capture thừa) */}
                         <div
                             className="absolute inset-0 z-20 print:hidden"
                             style={{ opacity: 1 }}
