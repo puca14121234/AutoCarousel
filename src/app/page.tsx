@@ -58,7 +58,9 @@ export default function Home() {
 
                     // Nếu có directory handle thì lưu trực tiếp luôn
                     if (directoryHandle) {
+                        // @ts-ignore
                         const fileHandle = await directoryHandle.getFileHandle(`slide-${i + 1}.png`, { create: true });
+                        // @ts-ignore
                         const writable = await fileHandle.createWritable();
                         const response = await fetch(dataUrl);
                         const blob = await response.blob();

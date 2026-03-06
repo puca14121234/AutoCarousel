@@ -50,7 +50,9 @@ export const bulkDownloadToDirectory = async (images: { dataUrl: string, name: s
         const directoryHandle = await window.showDirectoryPicker();
 
         for (const img of images) {
+            // @ts-ignore
             const fileHandle = await directoryHandle.getFileHandle(img.name, { create: true });
+            // @ts-ignore
             const writable = await fileHandle.createWritable();
 
             // Convert DataURL to Blob
