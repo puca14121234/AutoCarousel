@@ -93,7 +93,10 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
             left: centerX,
             top: centerY,
             selectable: true,
-            hasControls: true,
+            hasControls: false, // Bỏ các nút điều khiển kích thước/xoay theo yêu cầu
+            lockScalingX: true,
+            lockScalingY: true,
+            lockRotation: true,
             splitByGrapheme: false,
             padding: 40,
         });
@@ -166,11 +169,12 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                 >
                     <div
                         id="canvas-export-area"
-                        className="absolute top-0 left-0 bg-[#0b0b0b] overflow-hidden rounded-lg shadow-inner origin-top-left flex items-center justify-center"
+                        className="absolute top-0 left-0 bg-[#0b0b0b] rounded-lg shadow-inner origin-top-left flex items-center justify-center"
                         style={{
                             width: currentSize.width,
                             height: currentSize.height,
-                            transform: `scale(${scale})`
+                            transform: `scale(${scale})`,
+                            // Bỏ overflow-hidden để bóng đổ có thể vươn ra ngoài biên canvas
                         }}
                     >
                         {/* 1. DOM: Background Image thật sự đằng sau */}
@@ -182,64 +186,48 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                             />
                         )}
 
-                        {/* 2. DOM: CSS Glassmorphism - Tách rời Shadow Layer và Glass Layer để không lỗi backdrop-filter */}
+                        {/* 2. DOM: CSS Glassmorphism - Gộp lại thành 1 layer để đảm bảo Blur và Shadow cùng mượt */}
                         {textRect && (
-                            <>
-                                {/* Shadow Layer (Sibling bên dưới) */}
-                                <div style={{
-                                    position: 'absolute',
-                                    left: textRect.left,
-                                    top: textRect.top + (settings.footerSpacing ?? 40) / 2,
-                                    transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                    width: textRect.width + 80,
-                                    height: textRect.height + 80 + (settings.footerSpacing ?? 40),
-                                    backgroundColor: hexToRgba(settings.backgroundColor, 1), // Cần màu nền đặc để drop-shadow nhận diện
-                                    borderRadius: `${settings.borderRadius}px`,
-                                    filter: 'drop-shadow(0 20px 50px rgba(0,0,0,0.35))',
-                                    opacity: 0.01, // Rất mờ để không đè lên Blur nhưng vẫn tạo bóng đổ
-                                    zIndex: 9
-                                }} />
-
-                                {/* Glass & Content Layer (Sibling bên trên) */}
-                                <div style={{
-                                    position: 'absolute',
-                                    left: textRect.left,
-                                    top: textRect.top + (settings.footerSpacing ?? 40) / 2,
-                                    transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                    width: textRect.width + 80,
-                                    height: textRect.height + 80 + (settings.footerSpacing ?? 40),
-                                    backdropFilter: `blur(${settings.blur}px)`,
-                                    WebkitBackdropFilter: `blur(${settings.blur}px)`, // Tương thích Safari
-                                    backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
-                                    borderRadius: `${settings.borderRadius}px`,
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                                    pointerEvents: 'none',
-                                    zIndex: 10,
-                                    overflow: 'hidden' // Để các thành phần bên trong không tràn ra ngoài các góc bo
-                                }}>
-                                    {/* Branding */}
-                                    <div
-                                        className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
-                                        style={{ color: settings.textColor }}
-                                    >
-                                        {settings.watermarkLogo && (
-                                            <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
-                                        )}
-                                        {settings.watermark && (
-                                            <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
-                                                {settings.watermark}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
-                                    {slideIndex > 0 && slides.length > 0 && (
-                                        <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
-                                            {slideIndex + 1}/{slides.length}
-                                        </div>
+                            <div style={{
+                                position: 'absolute',
+                                left: textRect.left,
+                                top: textRect.top + (settings.footerSpacing ?? 40) / 2,
+                                transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
+                                width: textRect.width + 80,
+                                height: textRect.height + 80 + (settings.footerSpacing ?? 40),
+                                backdropFilter: `blur(${settings.blur}px)`,
+                                WebkitBackdropFilter: `blur(${settings.blur}px)`,
+                                backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
+                                borderRadius: `${settings.borderRadius}px`,
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                // Quay lại dùng box-shadow vì sự ổn định của backdrop-filter, 
+                                // nhưng bỏ overflow-hidden ở cha để không bị xén.
+                                boxShadow: '0 30px 60px rgba(0,0,0,0.3)',
+                                pointerEvents: 'none',
+                                zIndex: 10
+                            }}>
+                                {/* Branding */}
+                                <div
+                                    className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
+                                    style={{ color: settings.textColor }}
+                                >
+                                    {settings.watermarkLogo && (
+                                        <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
+                                    )}
+                                    {settings.watermark && (
+                                        <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
+                                            {settings.watermark}
+                                        </span>
                                     )}
                                 </div>
-                            </>
+
+                                {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
+                                {slideIndex > 0 && slides.length > 0 && (
+                                    <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
+                                        {slideIndex + 1}/{slides.length}
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                         {/* 3. FabricJS: Lớp Text trong suốt bên trên cùng chứa text chỉnh sửa được */}
