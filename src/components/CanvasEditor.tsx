@@ -102,6 +102,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
             selectable: isCover, // Chỉ cho kéo ở trang bìa
             evented: isCover,    // Chỉ nhận sự kiện ở trang bìa
             hasControls: false,  // Không hiện nút resize
+            hasBorders: false,   // Ẩn viền xanh dương khi click/kéo
             lockScalingX: true,
             lockScalingY: true,
             lockRotation: true,
