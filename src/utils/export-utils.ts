@@ -69,3 +69,33 @@ export const bulkDownloadToDirectory = async (images: { dataUrl: string, name: s
     }
 };
 
+/**
+ * Chia sẻ/Lưu ảnh vào Library thông qua Web Share API (Dành cho iOS/Android)
+ */
+export const shareImages = async (imageData: { dataUrl: string, name: string }[]): Promise<boolean> => {
+    if (!navigator.share || !navigator.canShare) {
+        return false;
+    }
+
+    try {
+        const files: File[] = [];
+        for (const img of imageData) {
+            const res = await fetch(img.dataUrl);
+            const blob = await res.blob();
+            files.push(new File([blob], img.name, { type: 'image/png' }));
+        }
+
+        if (navigator.canShare({ files })) {
+            await navigator.share({
+                files: files,
+                title: 'Auto Carousel Slides',
+                text: 'Bộ ảnh cuộn được tạo từ Auto Carousel'
+            });
+            return true;
+        }
+        return false;
+    } catch (err) {
+        console.error('Web Share API failed:', err);
+        return false;
+    }
+};

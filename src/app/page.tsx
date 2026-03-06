@@ -8,7 +8,7 @@ import { DesignSidebar } from '@/components/DesignSidebar';
 import { Timeline } from '@/components/Timeline';
 import { MobileWizard } from '@/components/MobileWizard';
 import { Sparkles, Download, Loader2 } from 'lucide-react';
-import { captureElement, bulkDownloadToDirectory } from '@/utils/export-utils';
+import { captureElement, bulkDownloadToDirectory, shareImages } from '@/utils/export-utils';
 
 export default function Home() {
     const { slides, currentSlideIndex, setCurrentSlideIndex, settings } = useCarouselStore();
@@ -79,9 +79,16 @@ export default function Home() {
                 }
             }
 
-            // Nếu không có directory handle và không hỗ trợ Picker, tiến trình download lẻ đã chạy trong loop.
-            // Không còn fallback ZIP theo yêu cầu.
+            // Nếu là mobile và hỗ trợ Share API, gọi share thay vì download lẻ
+            if (images.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
+                const shared = await shareImages(images);
+                if (shared) {
+                    setCurrentSlideIndex(0);
+                    return;
+                }
+            }
 
+            // Nếu không có directory handle và không hỗ trợ Share/Picker, tiến trình download lẻ đã chạy trong loop.
             setCurrentSlideIndex(0);
         } catch (err) {
             console.error('Export failed:', err);

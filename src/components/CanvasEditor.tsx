@@ -265,19 +265,39 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     width: textRect.width + 80,
                                     height: textRect.height + 80 + (settings.footerSpacing ?? 40),
                                     borderRadius: `${settings.borderRadius}px`,
-                                    overflow: 'hidden', // Lớp cha đóng vai trò hớt góc sạch sẽ cho backdrop-filter
+                                    overflow: 'hidden', // Lớp cha đóng vai trò hớt góc sạch sẽ
                                     pointerEvents: 'none',
-                                    zIndex: 10
+                                    zIndex: 10,
+                                    // Thêm border ở lớp ngoài để đảm bảo bo góc mượt
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
                                 }}>
-                                    {/* Inner Layer chuyên trách hiệu ứng Blur và Border */}
+                                    {/* Stable Blur Layer: Nhân bản ảnh nền và làm mờ (Capture-safe for iOS) */}
+                                    {currentBgImage && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            // Độ lệch để ảnh nền phụ khớp 100% với ảnh nền chính
+                                            left: -(textRect.left - (textRect.width + 80) / 2),
+                                            top: -(textRect.top + (settings.footerSpacing ?? 40) / 2 - (textRect.height + 80 + (settings.footerSpacing ?? 40)) / 2),
+                                            width: currentSize.width,
+                                            height: currentSize.height,
+                                            filter: `blur(${settings.blur}px)`,
+                                            transform: `rotate(${-textRect.angle}deg)`, // Hủy xoay để ảnh khớp trục
+                                            zIndex: -1
+                                        }}>
+                                            <img
+                                                src={currentBgImage}
+                                                alt="bg-blur"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Inner Color Layer (Màu nền đè lên Blur) */}
                                     <div style={{
                                         width: '100%',
                                         height: '100%',
-                                        backdropFilter: `blur(${settings.blur}px)`,
-                                        WebkitBackdropFilter: `blur(${settings.blur}px)`,
                                         backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: 'inherit', // Thừa hưởng bo góc
+                                        borderRadius: 'inherit',
                                     }}>
                                         {/* Branding */}
                                         <div

@@ -19,6 +19,7 @@ export const MobileWizard: React.FC = () => {
         if (slides.length === 0) return;
         setIsExporting(true);
         try {
+            const imageData: { dataUrl: string, name: string }[] = [];
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
                 // Tăng thời gian chờ render một chút để đảm bảo ổn định
@@ -27,12 +28,24 @@ export const MobileWizard: React.FC = () => {
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);
                     const dataUrl = await captureElement(el, 2, canvasSize.width, canvasSize.height);
-                    const link = document.createElement('a');
-                    link.download = `carousel-slide-${i + 1}.png`;
-                    link.href = dataUrl;
-                    link.click();
+                    imageData.push({ dataUrl, name: `carousel-slide-${i + 1}.png` });
                 }
             }
+
+            // Gọi Web Share API nếu hỗ trợ
+            if (imageData.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
+                const { shareImages } = await import('@/utils/export-utils');
+                await shareImages(imageData);
+            } else {
+                // Fallback: Tải lẻ (thường bị chặn trên iOS nên khuyến khích Share)
+                imageData.forEach(img => {
+                    const link = document.createElement('a');
+                    link.download = img.name;
+                    link.href = img.dataUrl;
+                    link.click();
+                });
+            }
+
             setCurrentSlideIndex(0);
         } catch (err) {
             console.error('Download all failed:', err);
