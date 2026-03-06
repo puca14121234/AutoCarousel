@@ -186,25 +186,27 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                             />
                         )}
 
-                        {/* 2. DOM: Shadow & Glass Layers (Tách rời để tránh xung đột filter và lỗi xén bóng) */}
+                        {/* 2. DOM: Shadow & Glass Layers (Tách rời Sibling để Shadow lan tỏa tự do không bị xén) */}
                         {textRect && (
                             <>
-                                {/* Shadow Layer (Thủ công bằng Blur để không bị xén và không lỗi backdrop-filter) */}
+                                {/* Shadow Layer (Sibling nằm dưới, chứa toàn bộ bóng đổ) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
-                                    top: textRect.top + (settings.footerSpacing ?? 40) / 2 + 15, // Đẩy bóng xuống dưới một chút
+                                    top: textRect.top + (settings.footerSpacing ?? 40) / 2,
                                     transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                    width: textRect.width + 70, // Đủ nhỏ để không bị xén bởi slide nhưng đủ to để chứa text
-                                    height: textRect.height + 70 + (settings.footerSpacing ?? 40),
-                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                    width: textRect.width + 80,
+                                    height: textRect.height + 80 + (settings.footerSpacing ?? 40),
                                     borderRadius: `${settings.borderRadius}px`,
-                                    filter: 'blur(35px)',
+                                    // Sử dụng box-shadow trên layer riêng biệt để tránh xung đột với backdrop-filter 
+                                    // và đảm bảo trình render không cắt xén biên.
+                                    boxShadow: '0 30px 80px rgba(0,0,0,0.3)',
+                                    backgroundColor: 'transparent',
                                     zIndex: 9,
                                     pointerEvents: 'none'
                                 }} />
 
-                                {/* Glass Layer (Chỉ chứa backdrop-filter và border) */}
+                                {/* Glass Layer (Sibling nằm trên, chỉ chứa Mờ kính và Nội dung) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
