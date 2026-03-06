@@ -340,8 +340,8 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                             lineHeight: isCover ? (settings.coverTitleLineHeight ?? 1.2) : (settings.contentLineHeight ?? 1.5),
                                             whiteSpace: 'pre-wrap',
                                             wordBreak: 'break-word',
-                                            padding: '0 40px',
-                                            marginBottom: (settings.footerSpacing ?? 40), // Tạo khoảng trống cho branding
+                                            padding: 0, // Bỏ padding để khớp 100% với FabricJS width
+                                            marginBottom: (settings.footerSpacing ?? 40),
                                         }}>
                                             {slide ? (isCover ? slide.title : slide.content) : ''}
                                         </div>
