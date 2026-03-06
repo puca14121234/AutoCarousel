@@ -22,7 +22,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
     const fabricRef = useRef<fabric.Canvas | null>(null);
     const [scale, setScale] = useState(0.5);
     const [textRect, setTextRect] = useState<{ width: number, height: number, left: number, top: number, angle: number } | null>(null);
-    const { settings, slides } = useCarouselStore();
+    const { settings, slides, isExporting } = useCarouselStore();
 
     const slideIndex = slide ? slides.findIndex(s => s.id === slide.id) : 0;
     const isCover = slideIndex === 0;
@@ -372,10 +372,12 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                             </>
                         )}
 
-                        {/* 3. FabricJS: Lớp Text trong suốt (data-export-ignore: quan trọng để Safari không capture thừa) */}
                         <div
                             className="absolute inset-0 z-20 print:hidden"
-                            style={{ opacity: 1 }}
+                            style={{
+                                opacity: 1,
+                                display: isExporting ? 'none' : 'block'
+                            }}
                             data-export-ignore="true"
                         >
                             <canvas ref={canvasRef} />

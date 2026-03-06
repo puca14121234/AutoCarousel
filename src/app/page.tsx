@@ -11,8 +11,10 @@ import { Sparkles, Download, Loader2 } from 'lucide-react';
 import { captureElement, bulkDownloadToDirectory, shareImages, downloadImage } from '@/utils/export-utils';
 
 export default function Home() {
-    const { slides, currentSlideIndex, setCurrentSlideIndex, settings, processedImages, setProcessedImages } = useCarouselStore();
-    const [isExporting, setIsExporting] = useState(false);
+    const {
+        slides, currentSlideIndex, setCurrentSlideIndex, settings, processedImages, setProcessedImages,
+        isExporting, setIsExporting
+    } = useCarouselStore();
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -46,8 +48,8 @@ export default function Home() {
 
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
-                // Tăng độ trễ an toàn cho iPhone xử lý DataURL lớn
-                await new Promise(resolve => setTimeout(resolve, 1200));
+                // Safari cần nhiều thời gian nạp DataURL lớn & Ổn định Render
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);

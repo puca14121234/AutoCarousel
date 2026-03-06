@@ -13,10 +13,10 @@ import { captureElement, bulkDownloadToDirectory, shareImages } from '@/utils/ex
 export const MobileWizard: React.FC = () => {
     const {
         currentStep, nextStep, prevStep, slides, currentSlideIndex,
-        setStep, settings, setCurrentSlideIndex, processedImages, setProcessedImages
+        setStep, settings, setCurrentSlideIndex, processedImages, setProcessedImages,
+        isExporting, setIsExporting
     } = useCarouselStore();
     const [showSettings, setShowSettings] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
 
     const handleExport = async () => {
         if (slides.length === 0) return;

@@ -60,6 +60,7 @@ interface CarouselState {
     processedImages: { dataUrl: string, name: string }[] | null;
     settings: DesignSettings;
     currentStep: number;
+    isExporting: boolean;
 
     // Actions
     setRawText: (text: string) => void;
@@ -71,6 +72,7 @@ interface CarouselState {
     setStep: (step: number) => void;
     nextStep: () => void;
     prevStep: () => void;
+    setIsExporting: (exporting: boolean) => void;
 }
 
 export const presets: Record<string, Partial<DesignSettings>> = {
@@ -147,6 +149,7 @@ export const useCarouselStore = create<CarouselState>()(
             currentSlideIndex: 0,
             processedImages: null,
             currentStep: 1,
+            isExporting: false,
             settings: defaultSettings,
 
             setRawText: (text) => set({ rawText: text }),
@@ -160,6 +163,7 @@ export const useCarouselStore = create<CarouselState>()(
             setStep: (step) => set({ currentStep: step }),
             nextStep: () => set((state) => ({ currentStep: Math.min(state.currentStep + 1, 5) })),
             prevStep: () => set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) })),
+            setIsExporting: (exporting) => set({ isExporting: exporting }),
         }),
         {
             name: 'autocarousel-settings', // key lưu vào localStorage
