@@ -19,10 +19,10 @@ export const captureElement = async (
         style: {
             transform: 'scale(1)',
             transformOrigin: 'top left',
-            borderRadius: '0',
-            left: '0',
-            top: '0'
-        }
+            margin: '0',
+            padding: '0',
+        },
+        backgroundColor: 'transparent'
     });
 };
 

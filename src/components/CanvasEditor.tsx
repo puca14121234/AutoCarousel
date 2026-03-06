@@ -196,7 +196,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                 backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
                                 borderRadius: `${settings.borderRadius}px`,
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))',
                                 pointerEvents: 'none', // Không cản click chuột vào text
                                 zIndex: 10
                             }}>
