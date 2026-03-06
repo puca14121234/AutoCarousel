@@ -186,27 +186,35 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                             />
                         )}
 
-                        {/* 2. DOM: Shadow & Glass Layers (Tách rời Sibling để Shadow lan tỏa tự do không bị xén) */}
+                        {/* 2. DOM: Shadow & Glass Layers (Kỹ thuật Safe-Margin để bóng không bao giờ bị xén) */}
                         {textRect && (
                             <>
-                                {/* Shadow Layer (Sibling nằm dưới, chứa toàn bộ bóng đổ) */}
+                                {/* Shadow Layer (Khung bao LỚN HƠN hẳn để chứa trọn vẹn box-shadow) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
                                     top: textRect.top + (settings.footerSpacing ?? 40) / 2,
                                     transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                    width: textRect.width + 80,
-                                    height: textRect.height + 80 + (settings.footerSpacing ?? 40),
-                                    borderRadius: `${settings.borderRadius}px`,
-                                    // Sử dụng box-shadow trên layer riêng biệt để tránh xung đột với backdrop-filter 
-                                    // và đảm bảo trình render không cắt xén biên.
-                                    boxShadow: '0 30px 80px rgba(0,0,0,0.3)',
-                                    backgroundColor: 'transparent',
-                                    zIndex: 9,
-                                    pointerEvents: 'none'
-                                }} />
+                                    // Thêm 200px mỗi chiều để tạo "vùng đệm an toàn" cho bóng đổ
+                                    width: textRect.width + 280,
+                                    height: textRect.height + 280 + (settings.footerSpacing ?? 40),
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    pointerEvents: 'none',
+                                    zIndex: 9
+                                }}>
+                                    <div style={{
+                                        // Hộp bóng đổ thực tế có kích thước khớp với Glass Layer
+                                        width: textRect.width + 80,
+                                        height: textRect.height + 80 + (settings.footerSpacing ?? 40),
+                                        borderRadius: `${settings.borderRadius}px`,
+                                        boxShadow: '0 30px 90px rgba(0,0,0,0.3)',
+                                        backgroundColor: 'transparent'
+                                    }} />
+                                </div>
 
-                                {/* Glass Layer (Sibling nằm trên, chỉ chứa Mờ kính và Nội dung) */}
+                                {/* Glass Layer (Chỉ chứa backdrop-filter và nội dung) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
