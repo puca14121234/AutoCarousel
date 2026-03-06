@@ -348,14 +348,17 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
 
                                         {/* Branding */}
                                         <div
-                                            className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
-                                            style={{ color: settings.textColor }}
+                                            className={`absolute bottom-6 flex items-center gap-3 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
+                                            style={{
+                                                color: settings.textColor,
+                                                opacity: 0.8
+                                            }}
                                         >
                                             {settings.watermarkLogo && (
                                                 <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
                                             )}
                                             {settings.watermark && (
-                                                <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
+                                                <span className="text-base font-semibold tracking-wide">
                                                     {settings.watermark}
                                                 </span>
                                             )}
@@ -363,7 +366,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
 
                                         {/* Page Number */}
                                         {slideIndex > 0 && slides.length > 0 && (
-                                            <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
+                                            <div className="absolute bottom-6 right-8 text-base font-medium font-mono" style={{ color: settings.textColor, opacity: 0.6 }}>
                                                 {slideIndex + 1}/{slides.length}
                                             </div>
                                         )}
