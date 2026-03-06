@@ -189,38 +189,47 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                 left: textRect.left,
                                 top: textRect.top + (settings.footerSpacing ?? 40) / 2, // Offset center to expand only downwards
                                 transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                width: textRect.width + 80,
-                                height: textRect.height + 80 + (settings.footerSpacing ?? 40), // Add spacing for footer
-                                backdropFilter: `blur(${settings.blur}px)`,
-                                WebkitBackdropFilter: `blur(${settings.blur}px)`, // Tương thích Safari
-                                backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
-                                borderRadius: `${settings.borderRadius}px`,
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))',
-                                pointerEvents: 'none', // Không cản click chuột vào text
+                                width: textRect.width + 280, // Tăng kích thước hộp bao để shadow không bị xén
+                                height: textRect.height + 280 + (settings.footerSpacing ?? 40),
+                                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.30))',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                pointerEvents: 'none',
                                 zIndex: 10
                             }}>
-                                {/* Branding */}
-                                <div
-                                    className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
-                                    style={{ color: settings.textColor }}
-                                >
-                                    {settings.watermarkLogo && (
-                                        <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
-                                    )}
-                                    {settings.watermark && (
-                                        <span className="text-base font-semibold tracking-wide drop-shadow-md" style={{ color: settings.textColor }}>
-                                            {settings.watermark}
-                                        </span>
+                                <div style={{
+                                    width: textRect.width + 80,
+                                    height: textRect.height + 80 + (settings.footerSpacing ?? 40),
+                                    backdropFilter: `blur(${settings.blur}px)`,
+                                    WebkitBackdropFilter: `blur(${settings.blur}px)`, // Tương thích Safari
+                                    backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
+                                    borderRadius: `${settings.borderRadius}px`,
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    position: 'relative'
+                                }}>
+                                    {/* Branding */}
+                                    <div
+                                        className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
+                                        style={{ color: settings.textColor }}
+                                    >
+                                        {settings.watermarkLogo && (
+                                            <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
+                                        )}
+                                        {settings.watermark && (
+                                            <span className="text-base font-semibold tracking-wide drop-shadow-md" style={{ color: settings.textColor }}>
+                                                {settings.watermark}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
+                                    {slideIndex > 0 && slides.length > 0 && (
+                                        <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
+                                            {slideIndex + 1}/{slides.length}
+                                        </div>
                                     )}
                                 </div>
-
-                                {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
-                                {slideIndex > 0 && slides.length > 0 && (
-                                    <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
-                                        {slideIndex + 1}/{slides.length}
-                                    </div>
-                                )}
                             </div>
                         )}
 
