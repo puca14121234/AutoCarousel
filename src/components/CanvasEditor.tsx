@@ -214,7 +214,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     }} />
                                 </div>
 
-                                {/* Glass Layer (Chỉ chứa backdrop-filter và nội dung) */}
+                                {/* Glass Layer (Double-Wrap: Lớp cha bo góc để hớt phần Blur tràn của lớp con) */}
                                 <div style={{
                                     position: 'absolute',
                                     left: textRect.left,
@@ -222,36 +222,43 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
                                     width: textRect.width + 80,
                                     height: textRect.height + 80 + (settings.footerSpacing ?? 40),
-                                    backdropFilter: `blur(${settings.blur}px)`,
-                                    WebkitBackdropFilter: `blur(${settings.blur}px)`,
-                                    backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
                                     borderRadius: `${settings.borderRadius}px`,
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    overflow: 'hidden', // Lớp cha đóng vai trò hớt góc sạch sẽ cho backdrop-filter
                                     pointerEvents: 'none',
-                                    zIndex: 10,
-                                    overflow: 'hidden' // Quan trọng để hớt backdrop-filter theo bo góc khi export
+                                    zIndex: 10
                                 }}>
-                                    {/* Branding */}
-                                    <div
-                                        className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
-                                        style={{ color: settings.textColor }}
-                                    >
-                                        {settings.watermarkLogo && (
-                                            <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
-                                        )}
-                                        {settings.watermark && (
-                                            <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
-                                                {settings.watermark}
-                                            </span>
+                                    {/* Inner Layer chuyên trách hiệu ứng Blur và Border */}
+                                    <div style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        backdropFilter: `blur(${settings.blur}px)`,
+                                        WebkitBackdropFilter: `blur(${settings.blur}px)`,
+                                        backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        borderRadius: 'inherit', // Thừa hưởng bo góc
+                                    }}>
+                                        {/* Branding */}
+                                        <div
+                                            className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
+                                            style={{ color: settings.textColor }}
+                                        >
+                                            {settings.watermarkLogo && (
+                                                <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
+                                            )}
+                                            {settings.watermark && (
+                                                <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
+                                                    {settings.watermark}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
+                                        {slideIndex > 0 && slides.length > 0 && (
+                                            <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
+                                                {slideIndex + 1}/{slides.length}
+                                            </div>
                                         )}
                                     </div>
-
-                                    {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
-                                    {slideIndex > 0 && slides.length > 0 && (
-                                        <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
-                                            {slideIndex + 1}/{slides.length}
-                                        </div>
-                                    )}
                                 </div>
                             </>
                         )}
