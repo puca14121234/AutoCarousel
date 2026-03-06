@@ -228,7 +228,8 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                     borderRadius: `${settings.borderRadius}px`,
                                     border: '1px solid rgba(255, 255, 255, 0.2)',
                                     pointerEvents: 'none',
-                                    zIndex: 10
+                                    zIndex: 10,
+                                    overflow: 'hidden' // Quan trọng để hớt backdrop-filter theo bo góc khi export
                                 }}>
                                     {/* Branding */}
                                     <div
