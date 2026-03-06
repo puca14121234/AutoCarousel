@@ -186,48 +186,63 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                             />
                         )}
 
-                        {/* 2. DOM: CSS Glassmorphism - Gộp lại thành 1 layer để đảm bảo Blur và Shadow cùng mượt */}
+                        {/* 2. DOM: Shadow & Glass Layers (Tách rời để tránh xung đột filter và lỗi xén bóng) */}
                         {textRect && (
-                            <div style={{
-                                position: 'absolute',
-                                left: textRect.left,
-                                top: textRect.top + (settings.footerSpacing ?? 40) / 2,
-                                transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
-                                width: textRect.width + 80,
-                                height: textRect.height + 80 + (settings.footerSpacing ?? 40),
-                                backdropFilter: `blur(${settings.blur}px)`,
-                                WebkitBackdropFilter: `blur(${settings.blur}px)`,
-                                backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
-                                borderRadius: `${settings.borderRadius}px`,
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                // Quay lại dùng box-shadow vì sự ổn định của backdrop-filter, 
-                                // nhưng bỏ overflow-hidden ở cha để không bị xén.
-                                boxShadow: '0 30px 60px rgba(0,0,0,0.3)',
-                                pointerEvents: 'none',
-                                zIndex: 10
-                            }}>
-                                {/* Branding */}
-                                <div
-                                    className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
-                                    style={{ color: settings.textColor }}
-                                >
-                                    {settings.watermarkLogo && (
-                                        <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
-                                    )}
-                                    {settings.watermark && (
-                                        <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
-                                            {settings.watermark}
-                                        </span>
+                            <>
+                                {/* Shadow Layer (Thủ công bằng Blur để không bị xén và không lỗi backdrop-filter) */}
+                                <div style={{
+                                    position: 'absolute',
+                                    left: textRect.left,
+                                    top: textRect.top + (settings.footerSpacing ?? 40) / 2 + 15, // Đẩy bóng xuống dưới một chút
+                                    transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
+                                    width: textRect.width + 70, // Đủ nhỏ để không bị xén bởi slide nhưng đủ to để chứa text
+                                    height: textRect.height + 70 + (settings.footerSpacing ?? 40),
+                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                    borderRadius: `${settings.borderRadius}px`,
+                                    filter: 'blur(35px)',
+                                    zIndex: 9,
+                                    pointerEvents: 'none'
+                                }} />
+
+                                {/* Glass Layer (Chỉ chứa backdrop-filter và border) */}
+                                <div style={{
+                                    position: 'absolute',
+                                    left: textRect.left,
+                                    top: textRect.top + (settings.footerSpacing ?? 40) / 2,
+                                    transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
+                                    width: textRect.width + 80,
+                                    height: textRect.height + 80 + (settings.footerSpacing ?? 40),
+                                    backdropFilter: `blur(${settings.blur}px)`,
+                                    WebkitBackdropFilter: `blur(${settings.blur}px)`,
+                                    backgroundColor: hexToRgba(settings.backgroundColor, settings.opacity),
+                                    borderRadius: `${settings.borderRadius}px`,
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    pointerEvents: 'none',
+                                    zIndex: 10
+                                }}>
+                                    {/* Branding */}
+                                    <div
+                                        className={`absolute bottom-6 flex items-center gap-3 opacity-80 ${isCover ? 'left-1/2 -translate-x-1/2' : 'left-10'}`}
+                                        style={{ color: settings.textColor }}
+                                    >
+                                        {settings.watermarkLogo && (
+                                            <img src={settings.watermarkLogo} alt="logo" className="w-8 h-8 object-contain" style={{ filter: 'brightness(0) invert(1)', ...((settings.textColor === '#ffffff' || settings.textColor === 'white') ? {} : { filter: 'none' }) }} />
+                                        )}
+                                        {settings.watermark && (
+                                            <span className="text-base font-semibold tracking-wide" style={{ color: settings.textColor }}>
+                                                {settings.watermark}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
+                                    {slideIndex > 0 && slides.length > 0 && (
+                                        <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
+                                            {slideIndex + 1}/{slides.length}
+                                        </div>
                                     )}
                                 </div>
-
-                                {/* Số trang góc dưới PHẢI (ẩn ở trang bìa) */}
-                                {slideIndex > 0 && slides.length > 0 && (
-                                    <div className="absolute bottom-6 right-8 text-base font-medium font-mono opacity-60" style={{ color: settings.textColor }}>
-                                        {slideIndex + 1}/{slides.length}
-                                    </div>
-                                )}
-                            </div>
+                            </>
                         )}
 
                         {/* 3. FabricJS: Lớp Text trong suốt bên trên cùng chứa text chỉnh sửa được */}
