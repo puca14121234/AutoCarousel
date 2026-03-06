@@ -64,7 +64,10 @@ export default function Home() {
                         const blob = await response.blob();
                         await writable.write(blob);
                         await writable.close();
-                    } else if (typeof window.showDirectoryPicker !== 'function') {
+                    } else if (
+                        // @ts-ignore
+                        typeof window.showDirectoryPicker !== 'function'
+                    ) {
                         // Fallback cho trình duyệt không hỗ trợ Picker: tải lẻ từng file (legacy mode)
                         const link = document.createElement('a');
                         link.download = `slide-${i + 1}.png`;
