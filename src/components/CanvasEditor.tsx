@@ -322,11 +322,37 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ slide }) => {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* 4. DOM: Text Layer Overlay (For Stable Rendering in Exports) */}
+                                <div style={{
+                                    position: 'absolute',
+                                    left: textRect.left,
+                                    top: textRect.top,
+                                    width: textRect.width,
+                                    height: textRect.height,
+                                    transform: `translate(-50%, -50%) rotate(${textRect.angle}deg)`,
+                                    pointerEvents: 'none',
+                                    zIndex: 30,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    textAlign: isCover ? (settings.coverTitleAlign ?? 'center') : (settings.contentTextAlign ?? 'center'),
+                                    color: settings.textColor,
+                                    fontFamily: isCover ? (settings.coverTitleFontFamily ?? settings.contentFontFamily) : settings.contentFontFamily,
+                                    fontSize: isCover ? (settings.coverTitleFontSize ?? 72) : settings.fontSizeContent,
+                                    fontWeight: isCover ? (settings.coverTitleFontWeight ?? 'bold') : 'normal',
+                                    lineHeight: isCover ? (settings.coverTitleLineHeight ?? 1.2) : (settings.contentLineHeight ?? 1.5),
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word',
+                                    padding: '0 40px', // Khớp với padding của Fabric Textbox
+                                }}>
+                                    {slide ? (isCover ? slide.title : slide.content) : ''}
+                                </div>
                             </>
                         )}
 
                         {/* 3. FabricJS: Lớp Text trong suốt bên trên cùng chứa text chỉnh sửa được */}
-                        <div className="absolute inset-0 z-20">
+                        <div className="absolute inset-0 z-20 print:hidden" style={{ opacity: 1 }}>
                             <canvas ref={canvasRef} />
                         </div>
                     </div>

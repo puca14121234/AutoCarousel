@@ -8,10 +8,10 @@ import { DesignSidebar } from '@/components/DesignSidebar';
 import { Timeline } from '@/components/Timeline';
 import { MobileWizard } from '@/components/MobileWizard';
 import { Sparkles, Download, Loader2 } from 'lucide-react';
-import { captureElement, bulkDownloadToDirectory, shareImages } from '@/utils/export-utils';
+import { captureElement, bulkDownloadToDirectory, shareImages, downloadImage } from '@/utils/export-utils';
 
 export default function Home() {
-    const { slides, currentSlideIndex, setCurrentSlideIndex, settings } = useCarouselStore();
+    const { slides, currentSlideIndex, setCurrentSlideIndex, settings, processedImages, setProcessedImages } = useCarouselStore();
     const [isExporting, setIsExporting] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -35,64 +35,44 @@ export default function Home() {
         const canvasSize = getCanvasSize(settings.aspectRatio);
 
         try {
-            // Thử lấy directory handle TRƯỚC khi chạy loop để tránh SecurityError
-            let directoryHandle: any = null;
+            const images: { dataUrl: string, name: string }[] = [];
             // @ts-ignore
-            if (typeof window.showDirectoryPicker === 'function') {
-                try {
-                    // @ts-ignore
-                    directoryHandle = await window.showDirectoryPicker();
-                } catch (e) {
-                    console.log('User cancelled directory picker or it failed');
-                }
-            }
+            const directoryHandle = await window.showDirectoryPicker().catch(() => null);
 
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
                 await new Promise(resolve => setTimeout(resolve, 800));
-
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
-                    const dataUrl = await captureElement(el, 2, canvasSize.width, canvasSize.height);
-                    images.push({ dataUrl, name: `carousel-slide-${i + 1}.png` });
+                    const canvasSize = getCanvasSize(settings.aspectRatio);
+                    const dataUrl = await captureElement(el, 3, canvasSize.width, canvasSize.height);
+                    const fileName = `carousel-slide-${i + 1}.png`;
 
-                    // Nếu có directory handle thì lưu trực tiếp luôn
                     if (directoryHandle) {
                         // @ts-ignore
-                        const fileHandle = await directoryHandle.getFileHandle(`slide-${i + 1}.png`, { create: true });
+                        const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
                         // @ts-ignore
                         const writable = await fileHandle.createWritable();
                         const response = await fetch(dataUrl);
                         const blob = await response.blob();
                         await writable.write(blob);
                         await writable.close();
-                    } else if (
-                        // @ts-ignore
-                        typeof window.showDirectoryPicker !== 'function'
-                    ) {
-                        // Fallback cho trình duyệt không hỗ trợ Picker: tải lẻ từng file (legacy mode)
-                        const link = document.createElement('a');
-                        link.download = `slide-${i + 1}.png`;
-                        link.href = dataUrl;
-                        link.click();
+                    } else if (!navigator.share) {
+                        // Chỉ tải lẻ tự động nếu KHÔNG phải mobile (để tránh chặn popup)
+                        downloadImage(dataUrl, fileName);
                     }
+                    images.push({ dataUrl, name: fileName });
                 }
             }
 
-            // Nếu là mobile và hỗ trợ Share API, gọi share thay vì download lẻ
+            // Nếu là mobile, lưu vào store để người dùng ấn nút lần 2
             if (images.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
-                const shared = await shareImages(images);
-                if (shared) {
-                    setCurrentSlideIndex(0);
-                    return;
-                }
+                setProcessedImages(images);
             }
 
-            // Nếu không có directory handle và không hỗ trợ Share/Picker, tiến trình download lẻ đã chạy trong loop.
             setCurrentSlideIndex(0);
         } catch (err) {
             console.error('Export failed:', err);
-            alert("Có lỗi xảy ra khi xuất ảnh. Vui lòng thử lại.");
         } finally {
             setIsExporting(false);
         }
@@ -118,12 +98,18 @@ export default function Home() {
                         <button
                             disabled={isExporting || slides.length === 0}
                             onClick={handleExport}
-                            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50 ${processedImages ? 'bg-green-600 hover:bg-green-500 animate-bounce' : 'bg-purple-600 hover:bg-purple-500'
+                                }`}
                         >
                             {isExporting ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Đang xuất...
+                                    Đang chuẩn bị...
+                                </>
+                            ) : processedImages ? (
+                                <>
+                                    <Download className="w-4 h-4" />
+                                    Lưu {processedImages.length} ảnh vào máy
                                 </>
                             ) : (
                                 <>

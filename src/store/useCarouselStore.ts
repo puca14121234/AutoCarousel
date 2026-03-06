@@ -57,6 +57,7 @@ interface CarouselState {
     rawText: string;
     slides: Slide[];
     currentSlideIndex: number;
+    processedImages: { dataUrl: string, name: string }[] | null;
     settings: DesignSettings;
     currentStep: number;
 
@@ -64,6 +65,7 @@ interface CarouselState {
     setRawText: (text: string) => void;
     setSlides: (slides: Slide[]) => void;
     setCurrentSlideIndex: (index: number) => void;
+    setProcessedImages: (images: { dataUrl: string, name: string }[] | null) => void;
     updateSettings: (settings: Partial<DesignSettings>) => void;
     applyPreset: (presetName: string) => void;
     setStep: (step: number) => void;
@@ -143,12 +145,14 @@ export const useCarouselStore = create<CarouselState>()(
             rawText: '',
             slides: [],
             currentSlideIndex: 0,
+            processedImages: null,
             currentStep: 1,
             settings: defaultSettings,
 
             setRawText: (text) => set({ rawText: text }),
             setSlides: (slides) => set({ slides }),
             setCurrentSlideIndex: (index) => set({ currentSlideIndex: index }),
+            setProcessedImages: (images) => set({ processedImages: images }),
             updateSettings: (newSettings) =>
                 set((state) => ({ settings: { ...state.settings, ...newSettings } })),
             applyPreset: (name) =>

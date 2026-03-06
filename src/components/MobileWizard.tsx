@@ -11,39 +11,51 @@ import { DesignSidebar } from './DesignSidebar';
 import { captureElement, bulkDownloadToDirectory } from '@/utils/export-utils';
 
 export const MobileWizard: React.FC = () => {
-    const { currentStep, nextStep, prevStep, slides, currentSlideIndex, setStep, settings, setCurrentSlideIndex } = useCarouselStore();
+    const {
+        currentStep, nextStep, prevStep, slides, currentSlideIndex,
+        setStep, settings, setCurrentSlideIndex, processedImages, setProcessedImages
+    } = useCarouselStore();
     const [showSettings, setShowSettings] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
     const handleExport = async () => {
         if (slides.length === 0) return;
+
+        // Nếu đã có ảnh đã xử lý, thực hiện Share
+        if (processedImages && processedImages.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
+            const { shareImages } = await import('@/utils/export-utils');
+            await shareImages(processedImages);
+            setProcessedImages(null);
+            return;
+        }
+
         setIsExporting(true);
+        setProcessedImages(null);
         try {
             const imageData: { dataUrl: string, name: string }[] = [];
             for (let i = 0; i < slides.length; i++) {
                 setCurrentSlideIndex(i);
-                // Tăng thời gian chờ render một chút để đảm bảo ổn định
                 await new Promise(resolve => setTimeout(resolve, 800));
                 const el = document.getElementById('canvas-export-area');
                 if (el) {
                     const canvasSize = getCanvasSize(settings.aspectRatio);
-                    const dataUrl = await captureElement(el, 2, canvasSize.width, canvasSize.height);
+                    const dataUrl = await captureElement(el, 3, canvasSize.width, canvasSize.height);
                     imageData.push({ dataUrl, name: `carousel-slide-${i + 1}.png` });
                 }
             }
 
-            // Gọi Web Share API nếu hỗ trợ
-            if (imageData.length > 0 && typeof navigator !== 'undefined' && !!navigator.share) {
-                const { shareImages } = await import('@/utils/export-utils');
-                await shareImages(imageData);
-            } else {
-                // Fallback: Tải lẻ (thường bị chặn trên iOS nên khuyến khích Share)
-                imageData.forEach(img => {
-                    const link = document.createElement('a');
-                    link.download = img.name;
-                    link.href = img.dataUrl;
-                    link.click();
-                });
+            if (imageData.length > 0) {
+                if (typeof navigator !== 'undefined' && !!navigator.share) {
+                    setProcessedImages(imageData);
+                } else {
+                    // Fallback PC download lẻ
+                    imageData.forEach(img => {
+                        const link = document.createElement('a');
+                        link.download = img.name;
+                        link.href = img.dataUrl;
+                        link.click();
+                    });
+                }
             }
 
             setCurrentSlideIndex(0);
@@ -169,10 +181,19 @@ export const MobileWizard: React.FC = () => {
                     <button
                         onClick={handleExport}
                         disabled={isExporting}
-                        title="Tải tất cả (PNG)"
-                        className="p-2 bg-purple-600 rounded-xl text-white disabled:opacity-50"
+                        className={`p-2 rounded-xl text-white disabled:opacity-50 transition-all ${processedImages ? 'bg-green-600 animate-bounce' : 'bg-purple-600'
+                            }`}
                     >
-                        {isExporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                        {isExporting ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : processedImages ? (
+                            <div className="flex items-center gap-1 text-xs px-1">
+                                <Download className="w-4 h-4" />
+                                Lưu {processedImages.length}
+                            </div>
+                        ) : (
+                            <Download className="w-5 h-5" />
+                        )}
                     </button>
                     <button onClick={() => setShowSettings(true)} className="p-2 bg-white/5 rounded-xl text-blue-400">
                         <Palette className="w-5 h-5" />
